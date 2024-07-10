@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Layout, Select, Space, Button, Modal } from 'antd';
+import { Layout, Select, Space, Button, Modal, Drawer } from 'antd';
 import { useCrypto } from '../../context/crypto-context';
 import CoinInfoModal from '../CoinInfoModal';
+import AddAssetForm from '../AddAssetForm';
 
 const headerStyle = {
     width: '100%',    
@@ -16,6 +17,7 @@ const headerStyle = {
 export const AppHeader = () => {
     const [select, setSelect] = useState(false);
     const [modal, setModal] = useState(false);
+    const [drawer, setDrawer] = useState(true);
     const [coin, setCoin] = useState(false);
     const { crypto } = useCrypto();
 
@@ -55,7 +57,12 @@ export const AppHeader = () => {
                 )}
             />
 
-            <Button type="primary">Add Asset</Button>
+            <Button 
+                type="primary"
+                onClick={() => setDrawer((prev) => !prev)}
+            >
+                Add Asset
+            </Button>
 
             <Modal 
                 open={modal} 
@@ -64,6 +71,16 @@ export const AppHeader = () => {
             >
                 <CoinInfoModal coin={coin}/>
             </Modal>
+
+            <Drawer 
+                width={600}
+                title="Add Asset"
+                onClose={() => setDrawer((prev) => !prev)} 
+                open={drawer}
+                destroyOnClose
+            >
+                <AddAssetForm/>
+            </Drawer>
         </Layout.Header>
     )
 }
