@@ -1,10 +1,50 @@
-import { Divider, Flex, Select, Space, Typography, Form, Input, InputNumber, Button, DatePicker } from "antd";
-import { useState } from "react"
+import { 
+    Divider, 
+    Flex, 
+    Select, 
+    Space, 
+    Typography, 
+    Form, 
+    InputNumber, 
+    Button, 
+    DatePicker, 
+    Result 
+} from "antd";
+import { useRef, useState } from "react"
 import { useCrypto } from "../context/crypto-context";
+import CoinInfo from "./CoinInfo";
 
-export default function AddAssetForm() {
-    const { crypto } = useCrypto();
+const validateMessages = {
+    required: "${label} is required!",
+    types: {
+        number: "${label} in not valid number"
+    },
+    number: {
+        range: "${label} must be between ${min} and ${max}"
+    }
+};
+
+export default function AddAssetForm({ onClose }) {
+    const [ form ] = Form.useForm();
+    const { crypto, addAsset } = useCrypto();
     const [coin, setCoin] = useState(null);
+    const [submitted, setSubmitted] = useState(false);
+    const assetRef = useRef();
+
+    if (submitted) {
+        return (
+            <Result
+                status="success"
+                title="New Asset Added"
+                subTitle={`Added ${assetRef.current.amount} of ${coin.name} by price ${assetRef.current.price}`}
+                extra={[
+                <Button type="primary" key="console" onClick={onClose}>
+                    Close
+                </Button>,
+                ]}
+            />
+        )
+    }
 
     if (!coin) {
         return (
@@ -27,39 +67,52 @@ export default function AddAssetForm() {
     }
 
     function onFinish(values) {
-        console.log(values);
+        const newAsset = {
+            id: coin.id,
+            amount: values.amount,
+            price: values.price,
+            date: values.date?.$d ?? new Date()
+        }
+        assetRef.current = newAsset;
+        addAsset(newAsset);
+        setSubmitted(true);
+    }
+
+    function handleAmountChange(value) {
+        const price = form.getFieldValue('price');
+
+        form.setFieldsValue({
+            total: +(value * price).toFixed(2)
+        })
+    }
+
+    function handlePriceChange(value) {
+        const amount = form.getFieldValue('amount');
+
+        form.setFieldsValue({
+            total: +(amount * value).toFixed(2)
+        })
     }
      
     return <Form
+        form={form}
         name="basic"
         labelCol={{
-        span: 4,
+            span: 4,
         }}
         wrapperCol={{
-        span: 10,
+            span: 10,
         }}
         style={{
-        maxWidth: 600,
+            maxWidth: 600,
         }}
         initialValues={{
-        remember: true,
+            price: +coin.price.toFixed(2)
         }}
         onFinish={onFinish}
+        validateMessages={validateMessages}
     >
-        <Flex align='center'>
-            <img 
-                src={coin.icon} 
-                alt={coin.name} 
-                style={{ width: 40, marginRight: 10 }}
-            />
-            <Typography.Title level={2} style={{ margin: 0 }}>
-                ({coin.symbol}) {coin.name}
-            </Typography.Title>
-
-            <Typography.Title level={2} style={{ margin: 0 }}>
-                {coin.name}
-            </Typography.Title>
-        </Flex>
+        <CoinInfo coin={coin}/>
 
         <Divider/>
         
@@ -71,25 +124,32 @@ export default function AddAssetForm() {
                 required: true,
                 type: 'number',
                 min: 0,
-                message: 'Please input your username!',
+                // message: 'Please input your username!',
                 },
             ]}
         >
-            <InputNumber />
+            <InputNumber 
+                placeholder="enter coin amount" 
+                style={{ width: '100%' }}
+                onChange={handleAmountChange}
+            />
         </Form.Item>
 
         <Form.Item
             label="Price"
             name="price"
         >
-            <InputNumber disabled style={{ width: '100%' }} />
+            <InputNumber 
+                onChange={handlePriceChange}
+                style={{ width: '100%' }} 
+            />
         </Form.Item>
 
         <Form.Item
             label="Date & time"
             name="date"
         >
-            <InputNumber disabled style={{ width: '100%' }} />
+            <DatePicker showTime/>
         </Form.Item>
 
         <Form.Item
