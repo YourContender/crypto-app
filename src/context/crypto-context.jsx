@@ -23,6 +23,7 @@ export function CryptoContextProvider({ children }) {
 				growPercent: percentDifference(asset.price, coin.price),
 				totalAmount: asset.amount * coin.price, // сколько в деньгах есть конкретной монетки
 				totalProfit: asset.amount * coin.price - asset.amount * asset.price,
+				name: coin.name,
 				...asset,
 			};
 		})
@@ -42,7 +43,7 @@ export function CryptoContextProvider({ children }) {
 	}, []);
 
 	function addAsset(newAsset) {
-		setAssets(prev => mapAssets([...prev, newAsset]))
+		setAssets(prev => mapAssets([...prev, newAsset], crypto))
 	}
 
 	return <CryptoContext.Provider 
